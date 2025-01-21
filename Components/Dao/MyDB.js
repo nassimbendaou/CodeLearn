@@ -5,12 +5,12 @@ class MyDb {
     }
     Connect = () =>
     firebase.initializeApp({
-      apiKey: "AIzaSyANGo9F0MtxJf8wkur-81yJyQ3ALZTlEUQ",
-    authDomain: "sololearn-fcfe1.firebaseapp.com",
-    databaseURL: "https://sololearn-fcfe1.firebaseio.com",
-    projectId: "sololearn-fcfe1",
-    storageBucket: "sololearn-fcfe1.appspot.com",
-    messagingSenderId: "498178347858"
+      apiKey: "**********",
+    authDomain: "**********",
+    databaseURL: "**********",
+    projectId: "**********",
+    storageBucket: "**********",
+    messagingSenderId: "**********",
     });
 }
 MyDb.shared = new MyDb();
