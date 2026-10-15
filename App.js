@@ -1,493 +1,68 @@
-import * as React from 'react';
-import { View, Text, TouchableOpacity ,StyleSheet,Image} from 'react-native';
-import { Vibration } from "react-native";  
-import { NavigationContainer } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Icon }from  "react-native-elements"
-import { createStackNavigator,TransitionPresets } from "@react-navigation/stack";
-import { createDrawerNavigator,DrawerNavigatorItems } from '@react-navigation/drawer';
-import {  DrawerActions } from '@react-navigation/native';
-import testlogin from "./Components/testlogin"
-import DrawerMain from "./Components/Drawer"
-import MyApp from "./Components/MyApp"
-import register from "./Components/register"
-import { navigationRef } from "./Components/Utils/RootNavigation";
-import TestInfos from "./Components/TestLogic/TestInfos"
-import TestCours from "./Components/Cours/TestCous"
-import TechResult from "./Components/Cours/TechResult"
-import TestPage from "./Components/TestLogic/TestPage"
-import initProfile from './Components/initProfile'
-import UserController from './Components/Controller/UserController'
-import UserProfile from './Components/UserProfile'
-import TestLevels from "./Components/TestLogic/TestLesvels"
-import Lessons from './Components/Cours/Lessons'
-import Header from "./Components/Header"
-import Fire from './Components/Dao/Fire';
-import TestResult from "./Components/TestLogic/TestResult";
-import Result from "./Components/Cours/Result";
-import UpdateProfile from './Components/UpdateProfile'
-import Comment from "./Components/Comments"
-import QuestCours from './Components/Cours/QuestCours';
-import TestOf from "./Components/Cours/TestOf"
-import Quiz from "./Components/itemQuiz"
-import ChallengeChoice from "./Components/ChallengeChoice"
-import TestChallenge from "./Components/TestChallenge"
-import  CustomSidebarMenu from "./Components/CustimeSideBar"
-import Profile from "./Components/Profile"
-import * as RootNavigation from "./Components/Utils/RootNavigation";
-import { Notifications } from 'expo';
-const Stack = createStackNavigator();
+import { Ionicons } from '@expo/vector-icons';
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useMemo, useState } from 'react';
+import { FlatList, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { fetchDashboard, postSchema } from './lib/data';
+import { nextRound, questions, rankPlayers } from './lib/game';
 
+const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
+const tabs = [
+  { key: 'home', label: 'Accueil', icon: 'home-outline' },
+  { key: 'learn', label: 'Parcours', icon: 'library-outline' },
+  { key: 'challenge', label: 'Défis', icon: 'flash-outline' },
+  { key: 'network', label: 'Réseau', icon: 'people-outline' },
+  { key: 'profile', label: 'Profil', icon: 'person-outline' },
+];
 
-
-
-const MyTheme = {
-  dark: true,
-  colors: {
-    background: "#6D6D6D"
-  }
-};
-function LogoTitle() {
-  return (
-    <View style={{ alignContent:"center" }}>
-    <Image
-      style={{ width: 60, height: 60,marginBottom:5,alignSelf:"center" }}
-      source={{uri:"https://i.ibb.co/2KPxGQc/brain-removebg-preview.png"}}
-    />
-    </View>
-  );
-}
-function returnPropic(){
-  return Fire.shared.user.image
-}
-const Drawer = createDrawerNavigator();
-function MyDrawer() {
-  return (
-  
-          <Drawer.Navigator    drawerContent={props => <CustomSidebarMenu {...props} />}  initialRouteName='Home'>
-            <Drawer.Screen name="Home" component={MyStack} />
-           
-        <Drawer.Screen name="Signout" component={testlogin} />
-        
-        </Drawer.Navigator>
-   
-  );
-}
-function MyStack({navigation}) {
-  
- 
-  return (
-    <Stack.Navigator theme={MyTheme} 
-   >
-     
-      <Stack.Screen
-        name="testlogin"
-        component={testlogin}
-        options={{ headerShown: false,drawerLockMode: 'locked-close'}}      
-      />
-       <Stack.Screen
-        name="App"
-        component={MyApp}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: (props) => (
-               <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-               >
-                  
-               <Image style={styles.pickimage} source={{ uri: returnPropic() }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="Register"
-        component={register}
-        options={{ headerShown: false ,  drawerLockMode: 'locked-close'}}
-      />
-       <Stack.Screen   
-        name="TestInfos"
-        component={TestInfos}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             )
-           }}
-      />  
-    <Stack.Screen       
-         name="TestChallenge"
-         component={TestChallenge}
-         options={{
-           headerShown: true ,
-              headerTitle: props => <LogoTitle {...props} />,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-              headerLeft: () => (
-                <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-                >
-                 <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-                </TouchableOpacity>
-              )
-            }}
-       />
-          <Stack.Screen       
-         name="userprofile"
-         component={UserProfile}
-         options={{
-           headerShown: true ,
-              headerTitle: props => <LogoTitle {...props} />,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-              headerLeft: () => (
-                <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-                >
-                 <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-                </TouchableOpacity>
-              )
-            }}
-       />
-         <Stack.Screen       
-         name="Profile"
-         component={Profile}
-         options={{
-           headerShown: true ,
-              headerTitle: props => <LogoTitle {...props} />,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-              headerLeft: () => (
-                <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-                >
-                 <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-                </TouchableOpacity>
-              )
-            }}
-       />
-       <Stack.Screen   
-        name="challengechoice"
-        component={ChallengeChoice}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             )
-           }}
-      />
-          <Stack.Screen       
-         name="Quiz"
-         component={Quiz}
-         options={{
-           headerShown: true ,
-              headerTitle: props => <LogoTitle {...props} />,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-              headerLeft: () => (
-                <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-                >
-                 <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-                </TouchableOpacity>
-              )
-            }}
-       />
-        <Stack.Screen       
-         name="UpdateProfile"
-         component={UpdateProfile}
-         options={{
-           headerShown: true ,
-              headerTitle: props => <LogoTitle {...props} />,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-              headerLeft: () => (
-                <TouchableOpacity
-                onPress={() => navigation.openDrawer()}
-                >
-                 <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-                </TouchableOpacity>
-              )
-            }}
-       />
-       <Stack.Screen
-         
-        
-         name="TechResult"
-         component={TechResult}
-         options={{
-           headerShown: true ,
-              headerTitle: props =><View style={{marginBottom:40}}></View>,
-              headerStyle: {
-               
-              },
-              headerTitleAlign:"center",
-             
-              gestureEnabled: true,
-              cardOverlayEnabled: true,
-              ...TransitionPresets.ModalPresentationIOS,
-            }}
-       />
-       <Stack.Screen
-        name="TestResult"
-        component={TestResult}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="Result"
-        component={Result}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="testcours"
-        component={TestCours}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-        <Stack.Screen
-        name="TestOf"
-        component={TestOf}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="questCours"
-        component={QuestCours}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-      
-      <Stack.Screen
-        name="TestPage"
-        component={TestPage}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-             
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri: Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="lessons"
-        component={Lessons}
-        options={{
-          headerShown: true ,
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-              
-             },
-             headerTitleAlign:"center",
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri:Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="TestLevels"
-        component={TestLevels}
-        options={{
-          headerShown: true ,
-          headerTitleAlign:"center",
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-            
-             },
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri: Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-          <Stack.Screen
-        name="comment"
-        component={Comment}
-        options={{
-          headerShown: true ,
-          headerTitleAlign:"center",
-             headerTitle: props => <LogoTitle {...props} />,
-             headerStyle: {
-            
-             },
-             headerLeft: () => (
-               <TouchableOpacity
-               onPress={() => navigation.openDrawer()}
-               >
-                <Image style={styles.pickimage} source={{ uri: Fire.shared.user.image }}  />
-               </TouchableOpacity>
-             ),
-           }}
-      />
-       <Stack.Screen
-        name="initProfile"
-        component={initProfile}
-        options={{ headerShown: false }}
-      />
-  
-  
-          
-    </Stack.Navigator>
-  );
+function AppShell() {
+  const [tab, setTab] = useState('home');
+  const dashboard = useQuery({ queryKey: ['dashboard'], queryFn: fetchDashboard });
+  if (dashboard.isLoading) return <Loading />;
+  if (dashboard.isError) return <ErrorState retry={dashboard.refetch} />;
+  const props = { data: dashboard.data, go: setTab };
+  const screens = { home: <Home {...props} />, learn: <Learning {...props} />, challenge: <Challenge {...props} />, network: <Network {...props} />, profile: <Profile {...props} /> };
+  return <SafeAreaView style={styles.safe}><StatusBar style="light" />{screens[tab]}<TabBar current={tab} setCurrent={setTab} /></SafeAreaView>;
 }
 
+function Loading() { return <SafeAreaView style={[styles.safe, styles.center]}><Text style={styles.brand}>CodeLearn</Text><Text style={styles.muted}>Préparation de votre espace…</Text></SafeAreaView>; }
+function ErrorState({ retry }) { return <SafeAreaView style={[styles.safe, styles.center]}><Text style={styles.title}>Connexion indisponible</Text><Pressable style={styles.primary} onPress={retry}><Text style={styles.primaryText}>Réessayer</Text></Pressable></SafeAreaView>; }
+function Header({ eyebrow, title, action, onAction }) { return <View style={styles.header}><View><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.title}>{title}</Text></View>{action && <Pressable onPress={onAction} style={styles.iconButton}><Ionicons name={action} size={20} color="#E9ECFF" /></Pressable>}</View>; }
+function Pill({ children, tone = 'violet' }) { return <View style={[styles.pill, tone === 'green' && styles.greenPill]}><Text style={[styles.pillText, tone === 'green' && styles.greenText]}>{children}</Text></View>; }
 
-  const CustomDrawer = props => {
-  
-    return (
-      <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
-        <Header/>
-        <DrawerNavigatorItems {...props} />
-      </View>
-    );
-  };
-export default function App() {
-    return (
-      <NavigationContainer ref={navigationRef}>
-    
-          <MyDrawer  />
-          
-          
-      </NavigationContainer>
-    );
-  }
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    
-    },
-    item: {
-      backgroundColor: '#000',
-    
-  
-    },
-    title: {
-      fontSize: 32,
-    },
-    pickimage: {
-      width: 35,
-      height: 35,
-      marginLeft:5,
-      marginBottom:5,
-      borderRadius: 63,
-      borderWidth: 2,
-      borderColor: "#7B7881",
- 
-    },
-  });
+function Home({ data, go }) {
+  const { learner, rooms } = data;
+  return <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
+    <Header eyebrow={`BON RETOUR, ${learner.name.toUpperCase()}`} title="Prêt à progresser ?" action="notifications-outline" />
+    <View style={styles.hero}><View style={styles.heroOrb} /><Pill tone="green">● Série de {learner.streak} jours</Pill><Text style={styles.heroTitle}>Une petite session,{`\n`}un vrai déclic.</Text><Text style={styles.heroBody}>Votre prochain défi personnalisé est prêt.</Text><Pressable style={styles.lightButton} onPress={() => go('challenge')}><Text style={styles.lightButtonText}>Lancer le défi</Text><Ionicons name="arrow-forward" size={18} color="#20124D" /></Pressable></View>
+    <View style={styles.stats}><Stat icon="trophy-outline" value={`${learner.points.toLocaleString()} XP`} label="points totaux" /><Stat icon="layers-outline" value={`Niv. ${learner.level}`} label="niveau actuel" /><Stat icon="people-outline" value={rooms} label="rooms actives" /></View>
+    <SectionTitle title="Continuez votre parcours" action="Voir tout" />
+    <Course title="React : états et effets" progress={72} duration="18 min restantes" color="#AE8CFF" />
+    <Course title="Logique algorithmique" progress={38} duration="4 leçons" color="#49D3BC" />
+    <SectionTitle title="Défis en direct" action="Rejoindre" onAction={() => go('challenge')} />
+    <View style={styles.liveCard}><View><Pill tone="green">● EN DIRECT</Pill><Text style={styles.liveTitle}>Sprint JavaScript</Text><Text style={styles.muted}>246 développeurs jouent maintenant</Text></View><Ionicons name="flash" size={30} color="#F8C35B" /></View>
+  </ScrollView>;
+}
+function Stat({ icon, value, label }) { return <View style={styles.stat}><Ionicons name={icon} size={18} color="#A98BFF" /><Text style={styles.statValue}>{value}</Text><Text style={styles.statLabel}>{label}</Text></View>; }
+function SectionTitle({ title, action, onAction }) { return <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{title}</Text>{action && <Pressable onPress={onAction}><Text style={styles.link}>{action}</Text></Pressable>}</View>; }
+function Course({ title, progress, duration, color }) { return <View style={styles.course}><View style={[styles.courseIcon, { backgroundColor: color }]}><Ionicons name="code-slash" size={18} color="#18132B" /></View><View style={styles.courseInfo}><Text style={styles.courseTitle}>{title}</Text><Text style={styles.muted}>{duration}</Text><View style={styles.track}><View style={[styles.progress, { width: `${progress}%`, backgroundColor: color }]} /></View></View><Text style={styles.percent}>{progress}%</Text></View>; }
+
+function Learning() { const modules = ['Bases de JavaScript', 'React Native moderne', 'APIs et données', 'Systèmes distribués']; return <ScrollView contentContainerStyle={styles.page}><Header eyebrow="PARCOURS ADAPTATIF" title="Apprendre par la pratique" action="search-outline" /><Text style={styles.body}>Des leçons courtes, des exercices immédiats et un rythme calculé selon votre progression.</Text>{modules.map((module, index) => <View key={module} style={styles.pathItem}><View style={[styles.pathNumber, index === 0 && styles.pathDone]}><Text style={styles.pathNumberText}>{index + 1}</Text></View><View style={styles.pathContent}><Text style={styles.courseTitle}>{module}</Text><Text style={styles.muted}>{index === 0 ? 'Terminé · 5 exercices' : `${4 + index} leçons · ${15 + index * 5} min`}</Text></View><Ionicons name={index === 0 ? 'checkmark-circle' : 'chevron-forward'} size={22} color={index === 0 ? '#49D3BC' : '#6E7191'} /></View>)}</ScrollView>; }
+
+function Challenge({ data }) {
+  const queryClient = useQueryClient(); const [state, setState] = useState({ questionIndex: 0, secondsLeft: 30, points: 0, streak: 0, answered: false, lastAnswer: null }); const [chat, setChat] = useState(['Maya: Bonne chance tout le monde !', 'Leo: Je vise le top 3.']); const [message, setMessage] = useState('');
+  const question = questions[state.questionIndex];
+  useEffect(() => { if (state.answered || state.secondsLeft === 0) return undefined; const timer = setInterval(() => setState((old) => ({ ...old, secondsLeft: Math.max(0, old.secondsLeft - 1) })), 1000); return () => clearInterval(timer); }, [state.answered, state.secondsLeft]);
+  const submit = useMutation({ mutationFn: async (choice) => { await new Promise((resolve) => setTimeout(resolve, 130)); return choice; }, onSuccess: (choice) => { setState((old) => nextRound(old, choice)); queryClient.setQueryData(['dashboard'], (old) => old ? { ...old, learner: { ...old.learner, points: old.learner.points + (choice === question.answer ? 100 : 0) } } : old); } });
+  const leaderboard = useMemo(() => rankPlayers([{ name: 'Vous', points: data.learner.points + state.points }, { name: 'Maya', points: 3010 }, { name: 'Leo', points: 2890 }, { name: 'Inès', points: 2670 }]), [data.learner.points, state.points]);
+  const advance = () => setState((old) => ({ ...old, questionIndex: (old.questionIndex + 1) % questions.length, secondsLeft: 30, answered: false, lastAnswer: null }));
+  const send = () => { if (!message.trim()) return; setChat((old) => [...old, `Vous: ${message.trim()}`]); setMessage(''); };
+  return <ScrollView contentContainerStyle={styles.page}><Header eyebrow="ROOM PUBLIQUE · SYNCHRONISÉE" title="Sprint JavaScript" action="ellipsis-horizontal" /><View style={styles.roomTop}><Pill tone="green">● 246 EN LIGNE</Pill><Text style={styles.timer}>{state.secondsLeft}s</Text><Text style={styles.xp}>+{state.points} XP</Text></View><View style={styles.questionCard}><Text style={styles.topic}>{question.topic.toUpperCase()}</Text><Text style={styles.question}>{question.prompt}</Text>{question.choices.map((choice, index) => <Pressable disabled={state.answered || submit.isPending} key={choice} onPress={() => submit.mutate(index)} style={[styles.answer, state.answered && index === question.answer && styles.answerRight]}><Text style={styles.answerKey}>{String.fromCharCode(65 + index)}</Text><Text style={styles.answerText}>{choice}</Text></Pressable>)}{state.lastAnswer && <View style={styles.result}><Text style={state.lastAnswer.correct ? styles.correct : styles.wrong}>{state.lastAnswer.correct ? `Correct ! +${state.lastAnswer.gained} XP` : 'Pas cette fois.'}</Text><Text style={styles.muted}>{state.lastAnswer.explanation}</Text><Pressable style={styles.primary} onPress={advance}><Text style={styles.primaryText}>Question suivante</Text></Pressable></View>}</View><SectionTitle title="Classement en direct" /><View style={styles.leaderboard}>{leaderboard.map((player, index) => <View style={styles.rank} key={player.name}><Text style={styles.rankNumber}>#{index + 1}</Text><Text style={styles.rankName}>{player.name}</Text><Text style={styles.rankPoints}>{player.points.toLocaleString()} XP</Text></View>)}</View><SectionTitle title="Chat de la room" /><View style={styles.chat}>{chat.slice(-3).map((line) => <Text key={line} style={styles.chatLine}>{line}</Text>)}<View style={styles.chatInput}><TextInput value={message} onChangeText={setMessage} onSubmitEditing={send} placeholder="Écrire un message" placeholderTextColor="#777A9A" style={styles.input} /><Pressable onPress={send}><Ionicons name="send" size={20} color="#A98BFF" /></Pressable></View></View></ScrollView>;
+}
+
+function Network({ data }) { const [posts, setPosts] = useState(data.feed); const [draft, setDraft] = useState(''); const publish = () => { const body = draft.trim(); if (!body) return; const post = postSchema.parse({ id: `local-${Date.now()}`, author: 'Nassim', handle: '@nassim.learns', body, tags: ['progression'], likes: 0, time: 'À l’instant' }); setPosts((old) => [post, ...old]); setDraft(''); }; return <View style={styles.flex}><View style={styles.page}><Header eyebrow="COMMUNAUTÉ" title="Le réseau qui vous fait avancer" action="search-outline" /><View style={styles.composer}><TextInput multiline value={draft} onChangeText={setDraft} placeholder="Partagez une réussite, une question…" placeholderTextColor="#777A9A" style={styles.composerInput} /><Pressable style={styles.smallPrimary} onPress={publish}><Text style={styles.primaryText}>Publier</Text></Pressable></View></View><FlatList contentContainerStyle={styles.feed} data={posts} keyExtractor={(item) => item.id} renderItem={({ item }) => <View style={styles.post}><View style={styles.avatar}><Text style={styles.avatarText}>{item.author[0]}</Text></View><View style={styles.postBody}><Text style={styles.author}>{item.author} <Text style={styles.handle}>{item.handle}</Text></Text><Text style={styles.postText}>{item.body}</Text><View style={styles.tags}>{item.tags.map((tag) => <Text style={styles.tag} key={tag}>#{tag}</Text>)}</View><View style={styles.postMeta}><Text style={styles.muted}>{item.time}</Text><Text style={styles.muted}>♡ {item.likes}</Text><Text style={styles.muted}>↗ partager</Text></View></View></View>} /></View>; }
+function Profile({ data }) { const { learner } = data; return <ScrollView contentContainerStyle={styles.page}><Header eyebrow="VOTRE PROFIL" title={learner.name} action="settings-outline" /><View style={styles.profileHero}><View style={styles.bigAvatar}><Text style={styles.bigAvatarText}>N</Text></View><Text style={styles.profileName}>{learner.name}</Text><Text style={styles.muted}>Développeur en progression</Text><View style={styles.profileStats}><Stat icon="flame-outline" value={`${learner.streak} jours`} label="série" /><Stat icon="trophy-outline" value={`${learner.points}`} label="XP" /><Stat icon="ribbon-outline" value="12" label="badges" /></View></View><SectionTitle title="Vos badges" /><View style={styles.badges}>{['Premier sprint', 'Curieux', 'Reactif', 'Top 10'].map((badge) => <View key={badge} style={styles.badge}><Ionicons name="sparkles" size={24} color="#F8C35B" /><Text style={styles.badgeText}>{badge}</Text></View>)}</View></ScrollView>; }
+function TabBar({ current, setCurrent }) { return <View style={styles.tabbar}>{tabs.map((item) => <Pressable key={item.key} onPress={() => setCurrent(item.key)} style={styles.tab}><Ionicons name={item.icon} size={22} color={current === item.key ? '#B69CFF' : '#727594'} /><Text style={[styles.tabText, current === item.key && styles.tabActive]}>{item.label}</Text></Pressable>)}</View>; }
+export default function App() { return <QueryClientProvider client={client}><AppShell /></QueryClientProvider>; }
+
+const styles = StyleSheet.create({ safe:{flex:1,backgroundColor:'#080B16'},flex:{flex:1},page:{padding:20,paddingBottom:108},center:{justifyContent:'center',alignItems:'center',gap:12},header:{flexDirection:'row',justifyContent:'space-between',alignItems:'flex-start',marginBottom:22},eyebrow:{color:'#A98BFF',fontSize:11,fontWeight:'800',letterSpacing:1.1},title:{color:'#F4F2FF',fontSize:27,fontWeight:'800',marginTop:5},iconButton:{width:40,height:40,borderRadius:20,backgroundColor:'#171B2D',alignItems:'center',justifyContent:'center'},brand:{color:'#B69CFF',fontSize:32,fontWeight:'800'},muted:{color:'#9396B5',fontSize:12},body:{color:'#C5C7DA',fontSize:15,lineHeight:22,marginBottom:20},hero:{backgroundColor:'#8462E9',borderRadius:28,padding:24,overflow:'hidden',marginBottom:18},heroOrb:{position:'absolute',width:220,height:220,borderRadius:110,borderWidth:36,borderColor:'#A68CFF',right:-75,bottom:-110},pill:{alignSelf:'flex-start',backgroundColor:'#E5DEFF',paddingHorizontal:9,paddingVertical:5,borderRadius:20},pillText:{color:'#5437A9',fontSize:10,fontWeight:'800'},greenPill:{backgroundColor:'#143E3D'},greenText:{color:'#5BE1C6'},heroTitle:{fontSize:28,lineHeight:34,fontWeight:'800',color:'#FFF',marginTop:16},heroBody:{color:'#EDE8FF',marginTop:8,marginBottom:19},lightButton:{backgroundColor:'#FFF',alignSelf:'flex-start',borderRadius:14,paddingHorizontal:15,paddingVertical:11,flexDirection:'row',gap:8,alignItems:'center'},lightButtonText:{color:'#241352',fontWeight:'800'},stats:{flexDirection:'row',gap:10,marginBottom:26},stat:{flex:1,backgroundColor:'#111526',padding:13,borderRadius:18,gap:5},statValue:{color:'#F1EEFF',fontWeight:'800',fontSize:15},statLabel:{color:'#8285A4',fontSize:10},sectionHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:12},sectionTitle:{color:'#F2F0FF',fontWeight:'800',fontSize:17},link:{color:'#AD93FF',fontWeight:'700',fontSize:12},course:{backgroundColor:'#111526',borderRadius:19,padding:14,flexDirection:'row',alignItems:'center',gap:12,marginBottom:10},courseIcon:{width:42,height:42,borderRadius:13,alignItems:'center',justifyContent:'center'},courseInfo:{flex:1,gap:4},courseTitle:{color:'#ECEBFA',fontSize:14,fontWeight:'700'},track:{height:5,backgroundColor:'#272B41',borderRadius:4,overflow:'hidden',marginTop:5},progress:{height:'100%',borderRadius:4},percent:{color:'#B4B6D0',fontSize:12,fontWeight:'700'},liveCard:{backgroundColor:'#171B2D',borderWidth:1,borderColor:'#2C3150',borderRadius:20,padding:18,flexDirection:'row',justifyContent:'space-between'},liveTitle:{color:'#F2F0FF',fontWeight:'800',fontSize:17,marginTop:13,marginBottom:5},pathItem:{flexDirection:'row',backgroundColor:'#111526',padding:16,borderRadius:18,alignItems:'center',gap:13,marginBottom:10},pathNumber:{width:33,height:33,borderRadius:17,borderWidth:1,borderColor:'#5F6382',alignItems:'center',justifyContent:'center'},pathDone:{backgroundColor:'#2F937F',borderColor:'#2F937F'},pathNumberText:{color:'#F1F1FA',fontWeight:'800'},pathContent:{flex:1},roomTop:{flexDirection:'row',alignItems:'center',gap:9,marginBottom:12},timer:{color:'#F8C35B',fontSize:20,fontWeight:'900',marginLeft:'auto'},xp:{color:'#5BE1C6',fontWeight:'800'},questionCard:{backgroundColor:'#111526',borderRadius:24,padding:19,marginBottom:23},topic:{color:'#A98BFF',fontSize:11,fontWeight:'800',letterSpacing:1},question:{color:'#F4F2FF',fontSize:19,fontWeight:'800',lineHeight:26,marginVertical:15},answer:{borderWidth:1,borderColor:'#2B2F48',borderRadius:14,padding:12,marginBottom:8,flexDirection:'row',alignItems:'center',gap:10},answerRight:{borderColor:'#49D3BC',backgroundColor:'#103735'},answerKey:{color:'#B6B8D0',fontWeight:'800'},answerText:{color:'#E5E3F2',fontSize:13,flex:1},result:{paddingTop:9,gap:9},correct:{color:'#5BE1C6',fontWeight:'800'},wrong:{color:'#FF8E9A',fontWeight:'800'},primary:{backgroundColor:'#9C7BFF',borderRadius:13,paddingVertical:12,paddingHorizontal:16,alignSelf:'flex-start',marginTop:4},primaryText:{color:'#170C39',fontWeight:'900'},leaderboard:{backgroundColor:'#111526',borderRadius:18,padding:10,marginBottom:22},rank:{padding:10,flexDirection:'row',alignItems:'center',gap:10},rankNumber:{color:'#F8C35B',fontWeight:'900',width:26},rankName:{color:'#EFEFFF',fontWeight:'700',flex:1},rankPoints:{color:'#B4B6D0',fontSize:12},chat:{backgroundColor:'#111526',borderRadius:18,padding:14,gap:7},chatLine:{color:'#D8D7E9',fontSize:12},chatInput:{borderTopWidth:1,borderTopColor:'#272B41',paddingTop:10,flexDirection:'row',alignItems:'center'},input:{flex:1,color:'#FFF',fontSize:13,padding:5},composer:{backgroundColor:'#111526',borderRadius:18,padding:14,marginBottom:15},composerInput:{minHeight:65,color:'#F1F1FA',textAlignVertical:'top',fontSize:14},smallPrimary:{backgroundColor:'#9C7BFF',borderRadius:11,paddingVertical:9,paddingHorizontal:13,alignSelf:'flex-end'},feed:{paddingHorizontal:20,paddingBottom:110},post:{flexDirection:'row',gap:11,backgroundColor:'#111526',borderRadius:18,padding:14,marginBottom:10},avatar:{width:34,height:34,borderRadius:17,backgroundColor:'#8261E5',alignItems:'center',justifyContent:'center'},avatarText:{color:'#FFF',fontWeight:'900'},postBody:{flex:1},author:{color:'#F3F2FF',fontWeight:'800',fontSize:13},handle:{color:'#898CAA',fontWeight:'400'},postText:{color:'#D9D8E8',fontSize:13,lineHeight:19,marginVertical:8},tags:{flexDirection:'row',gap:7},tag:{color:'#AB92FD',fontSize:11},postMeta:{flexDirection:'row',justifyContent:'space-between',marginTop:12},profileHero:{backgroundColor:'#111526',borderRadius:24,padding:24,alignItems:'center',marginBottom:25},bigAvatar:{width:75,height:75,borderRadius:38,backgroundColor:'#8869EA',alignItems:'center',justifyContent:'center'},bigAvatarText:{fontSize:29,fontWeight:'900',color:'#FFF'},profileName:{fontSize:21,fontWeight:'800',color:'#F3F2FF',marginTop:12},profileStats:{flexDirection:'row',width:'100%',gap:8,marginTop:19},badges:{flexDirection:'row',flexWrap:'wrap',gap:10},badge:{width:'47%',backgroundColor:'#111526',borderRadius:16,padding:15,gap:9},badgeText:{color:'#EBE9F8',fontWeight:'700',fontSize:12},tabbar:{position:'absolute',bottom:0,left:0,right:0,backgroundColor:'#0E1221',borderTopWidth:1,borderTopColor:'#222740',paddingTop:9,paddingBottom:12,flexDirection:'row',justifyContent:'space-around'},tab:{alignItems:'center',gap:3,minWidth:55},tabText:{fontSize:9,color:'#727594',fontWeight:'700'},tabActive:{color:'#B69CFF'} });
