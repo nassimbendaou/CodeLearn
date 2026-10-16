@@ -4,6 +4,7 @@ on:
   push:
     branches: [master]
     paths:
+      - '.github/workflows/storybook.yml'
       - '.storybook/**'
       - 'stories/**'
       - 'assets/badges/**'
