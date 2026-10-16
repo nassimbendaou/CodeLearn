@@ -1,4 +1,4 @@
-import { nextRound, pointsForAnswer, rankPlayers } from '../lib/game';
+import { nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
 
 describe('challenge scoring', () => {
   it('rewards fast correct answers and preserves a failed streak', () => {
@@ -10,5 +10,9 @@ describe('challenge scoring', () => {
 
   it('ranks players by points then name', () => {
     expect(rankPlayers([{ name: 'Zoé', points: 200 }, { name: 'Ana', points: 200 }, { name: 'Malik', points: 340 }]).map((player) => player.name)).toEqual(['Malik', 'Ana', 'Zoé']);
+  });
+
+  it('provides a unique sequence for a room', () => {
+    expect(new Set(questions.map((question) => question.id)).size).toBe(questions.length);
   });
 });
