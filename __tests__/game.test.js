@@ -1,4 +1,5 @@
 import { nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
+import { reviewCode } from '../lib/review';
 
 describe('challenge scoring', () => {
   it('rewards fast correct answers and preserves a failed streak', () => {
@@ -14,5 +15,12 @@ describe('challenge scoring', () => {
 
   it('provides a unique sequence for a room', () => {
     expect(new Set(questions.map((question) => question.id)).size).toBe(questions.length);
+    expect(questions.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it('returns actionable senior review notes', () => {
+    expect(reviewCode('var total = 2; console.log(total)')).toMatchObject({ score: expect.any(Number) });
+    expect(reviewCode('var total = 2; console.log(total)').notes).toHaveLength(4);
+    expect(reviewCode('const total = (value) => value * 2;').score).toBeGreaterThan(80);
   });
 });
