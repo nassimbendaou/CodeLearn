@@ -2,6 +2,7 @@ import { createChallengeRound, nextRound, pointsForAnswer, questions, rankPlayer
 import { reviewCode } from '../lib/review';
 import { getPlacementRecommendation, placementQuestions } from '../lib/placement';
 import { getAdaptivePlan, getNextSkill } from '../lib/adaptive';
+import { getDailyChallenge, getLeague } from '../lib/league';
 
 describe('challenge scoring', () => {
   it('rewards fast correct answers and preserves a failed streak', () => {
@@ -39,6 +40,11 @@ describe('challenge scoring', () => {
     expect(getNextSkill(initialPlan)).toMatchObject({ id: 'js-basics', unlocked: true });
     const progressedPlan = getAdaptivePlan(placement, ['js-basics']);
     expect(getNextSkill(progressedPlan)).toMatchObject({ id: 'js-functions', unlocked: true });
+  });
+
+  it('assigns leagues and a deterministic daily challenge', () => {
+    expect(getLeague(3_200)).toMatchObject({ name: 'Or', nextName: 'Platine', pointsToNext: 2_800 });
+    expect(getDailyChallenge(6)).toMatchObject({ id: expect.any(String), reward: 250 });
   });
 
 });

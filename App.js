@@ -10,6 +10,7 @@ import { reviewCode } from './lib/review';
 import { getSeniorReview } from './lib/aiReview';
 import { getPlacementRecommendation, placementQuestions, placementSchema } from './lib/placement';
 import { getAdaptivePlan, getNextSkill, skillProgressSchema } from './lib/adaptive';
+import { getDailyChallenge, getLeague } from './lib/league';
 
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
 const tabs = [
@@ -62,10 +63,14 @@ function Placement({ complete }) { const [index, setIndex] = useState(0); const 
 function Home({ data, go, startPath, placement, recommendedPath, adaptivePlan }) {
   const { learner, rooms } = data;
   const nextSkill = getNextSkill(adaptivePlan);
+  const league = getLeague(learner.points);
+  const daily = getDailyChallenge(learner.streak);
   return <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
     <Header eyebrow={`BON RETOUR, ${learner.name.toUpperCase()}`} title="Prêt à progresser ?" action="notifications-outline" />
     <View style={styles.hero}><View style={styles.heroOrb} /><Pill tone="green">● Niveau {placement.level} · {placement.label}</Pill><Text style={styles.heroTitle}>Votre parcours,{`\n`}prêt à décoller.</Text><Text style={styles.heroBody}>Prochaine compétence : {nextSkill.title}.</Text><Pressable style={styles.lightButton} onPress={() => startPath(learningPaths.find((path) => path.id === nextSkill.pathId) ?? recommendedPath)}><Text style={styles.lightButtonText}>Travailler cette compétence</Text><Ionicons name="arrow-forward" size={18} color="#20124D" /></Pressable></View>
     <View style={styles.stats}><Stat icon="trophy-outline" value={`${learner.points.toLocaleString()} XP`} label="points totaux" /><Stat icon="layers-outline" value={`Niv. ${learner.level}`} label="niveau actuel" /><Stat icon="people-outline" value={rooms} label="rooms actives" /></View>
+    <View style={styles.questionCard}><View style={styles.roomTop}><Pill tone="green">{league.name.toUpperCase()}</Pill><Text style={styles.xp}>{league.pointsToNext ? `${league.pointsToNext} XP avant ${league.nextName}` : 'Ligue maximale'}</Text></View><Text style={styles.courseTitle}>Votre ligue hebdomadaire</Text><Text style={styles.muted}>Gagnez des XP dans les défis et conservez votre place.</Text></View>
+    <Pressable style={styles.questionCard} onPress={() => go('challenge')}><Pill>+{daily.reward} XP</Pill><Text style={styles.liveTitle}>{daily.label} · {daily.topic}</Text><Text style={styles.body}>{daily.prompt}</Text><Text style={styles.link}>Jouer maintenant →</Text></Pressable>
     <SectionTitle title="Compétences à débloquer" action="Voir tout" onAction={() => go('learn')} />
     {adaptivePlan.slice(0, 3).map((skill) => <Course key={skill.id} title={skill.completed ? `✓ ${skill.title}` : skill.title} progress={skill.progress} duration={skill.completed ? 'Compétence validée' : skill.unlocked ? skill.description : `Se déverrouille au niveau ${skill.requiredLevel}`} color={skill.color} onPress={() => skill.unlocked && startPath(learningPaths.find((path) => path.id === skill.pathId) ?? recommendedPath)} />)}
     <SectionTitle title="Défis en direct" action="Rejoindre" onAction={() => go('challenge')} />
