@@ -1,4 +1,4 @@
-import { nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
+import { createChallengeRound, nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
 import { reviewCode } from '../lib/review';
 
 describe('challenge scoring', () => {
@@ -15,7 +15,8 @@ describe('challenge scoring', () => {
 
   it('provides a unique sequence for a room', () => {
     expect(new Set(questions.map((question) => question.id)).size).toBe(questions.length);
-    expect(questions.length).toBeGreaterThanOrEqual(20);
+    expect(questions.length).toBeGreaterThanOrEqual(10_000);
+    expect(createChallengeRound(10, 450).map((question) => question.id)).toHaveLength(10);
   });
 
   it('returns actionable senior review notes', () => {
