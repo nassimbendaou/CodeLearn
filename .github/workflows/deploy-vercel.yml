@@ -15,15 +15,24 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Resolve personal Vercel account ID
+        run: |
+          account_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $VERCEL_TOKEN" https://api.vercel.com/v2/user)"
+          account_id="$(node -e 'const user = JSON.parse(process.argv[1]).user; if (!user?.id) process.exit(1); process.stdout.write(user.id);' "$account_json")"
+          echo "VERCEL_ORG_ID=$account_id" >> "$GITHUB_ENV"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       - name: Pull Vercel project settings
         run: npx vercel@latest pull --yes --environment=production --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       - name: Build production site
         run: npx vercel@latest build --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           EXPO_PUBLIC_DEPLOY_TARGET: vercel
           EXPO_PUBLIC_AI_REVIEW_URL: ${{ vars.EXPO_PUBLIC_AI_REVIEW_URL }}
@@ -38,4 +47,5 @@ jobs:
         run: npx vercel@latest deploy --prebuilt --prod --token="$VERCEL_TOKEN"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ env.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
