@@ -26,5 +26,5 @@ Renseignez les variables `EXPO_PUBLIC_FIREBASE_*` de `.env`, créez une base **R
 1. Sur [Vercel](https://vercel.com/new), importez `nassimbendaou/CodeLearn` une seule fois et créez le projet.
 2. Dans Vercel, ouvrez **Settings → General** et copiez l’Organisation et le Project ID.
 3. Dans Vercel, créez un token sous **Account Settings → Tokens**.
-4. Dans GitHub **Settings → Secrets and variables → Actions → Secrets**, ajoutez `VERCEL_TOKEN`, `VERCEL_ORG_ID` et `VERCEL_PROJECT_ID`.
+4. Dans GitHub **Settings → Secrets and variables → Actions → Secrets**, ajoutez `VERCEL_TOKEN` et `VERCEL_PROJECT_ID`. Ajoutez aussi `VERCEL_ORG_ID` seulement si le projet appartient à une équipe Vercel.
 5. Lancez **Deploy web app to Vercel** dans l’onglet Actions. Chaque push sur `master` redéploiera ensuite le site.
