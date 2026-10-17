@@ -1,3 +1,4 @@
+// Deployed by the "Deploy AI review worker" GitHub Actions workflow.
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'content-type',
