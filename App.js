@@ -6,6 +6,7 @@ import { FlatList, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text,
 import { fetchDashboard, postSchema } from './lib/data';
 import { createChallengeRound, nextRound, questions, rankPlayers } from './lib/game';
 import { reviewCode } from './lib/review';
+import { getSeniorReview } from './lib/aiReview';
 
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
 const tabs = [
@@ -90,7 +91,7 @@ function CodeWorkshop({ close }) {
   const [review, setReview] = useState(() => reviewCode(code));
   const [reviewedCode, setReviewedCode] = useState(code);
   const reviewing = code !== reviewedCode;
-  useEffect(() => { const timer = setTimeout(() => { setReview(reviewCode(code)); setReviewedCode(code); }, 450); return () => clearTimeout(timer); }, [code]);
+  useEffect(() => { let active = true; const timer = setTimeout(() => { getSeniorReview(code).then((nextReview) => { if (!active) return; setReview(nextReview); setReviewedCode(code); }); }, 450); return () => { active = false; clearTimeout(timer); }; }, [code]);
   return <ScrollView contentContainerStyle={styles.page}><View style={styles.lessonHeader}><Pressable onPress={close} style={styles.iconButton}><Ionicons name="arrow-back" size={20} color="#E9ECFF" /></Pressable><View style={styles.lessonHeaderText}><Text style={styles.eyebrow}>ATELIER LIVE · SENIOR ENGINEER</Text><Text style={styles.courseTitle}>Revue en temps réel</Text></View><Pill tone="green">● EN LIGNE</Pill></View><View style={styles.questionCard}><Text style={styles.topic}>MISSION</Text><Text style={styles.question}>Écrivez une fonction qui double un nombre.</Text><Text style={styles.muted}>Le senior analyse votre code automatiquement à chaque pause de frappe.</Text><TextInput value={code} onChangeText={setCode} multiline autoCapitalize="none" autoCorrect={false} spellCheck={false} style={[styles.codeBlock, { minHeight: 150, color: '#E9E8F9', textAlignVertical: 'top' }]} /></View><View style={styles.questionCard}><View style={styles.roomTop}><View><Text style={styles.topic}>SENIOR · AMINA</Text><Text style={styles.courseTitle}>{reviewing ? 'Analyse en cours…' : `${review.score}/100 · revue prête`}</Text></View><Ionicons name={reviewing ? 'ellipsis-horizontal' : 'checkmark-circle'} size={28} color={reviewing ? '#F8C35B' : '#5BE1C6'} /></View><Text style={styles.body}>{review.verdict}</Text>{review.notes.map((note) => <View key={note} style={styles.practice}><View style={styles.practiceIcon}><Ionicons name="chatbubble-ellipses" size={17} color="#F8C35B" /></View><Text style={styles.answerText}>{note}</Text></View>)}</View><Pressable style={styles.widePrimary} onPress={() => setCode('function double(value) {\n  if (typeof value !== \'number\') return 0;\n  return value * 2;\n}')}><Text style={styles.primaryText}>Voir une solution robuste</Text></Pressable></ScrollView>;
 }
 
