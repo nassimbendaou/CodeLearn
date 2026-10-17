@@ -1,6 +1,7 @@
 import { createChallengeRound, nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
 import { reviewCode } from '../lib/review';
 import { getPlacementRecommendation, placementQuestions } from '../lib/placement';
+import { getAdaptivePlan, getNextSkill } from '../lib/adaptive';
 
 describe('challenge scoring', () => {
   it('rewards fast correct answers and preserves a failed streak', () => {
@@ -30,6 +31,14 @@ describe('challenge scoring', () => {
     expect(placementQuestions).toHaveLength(6);
     expect(getPlacementRecommendation([0, 0, 0, 0, 0, 0])).toMatchObject({ level: 1, pathId: 'js' });
     expect(getPlacementRecommendation(placementQuestions.map((question) => question.answer))).toMatchObject({ level: 5, pathId: 'react' });
+  });
+
+  it('unlocks the next skill after completing the current one', () => {
+    const placement = getPlacementRecommendation([0, 0, 0, 0, 0, 0]);
+    const initialPlan = getAdaptivePlan(placement);
+    expect(getNextSkill(initialPlan)).toMatchObject({ id: 'js-basics', unlocked: true });
+    const progressedPlan = getAdaptivePlan(placement, ['js-basics']);
+    expect(getNextSkill(progressedPlan)).toMatchObject({ id: 'js-functions', unlocked: true });
   });
 
 });
