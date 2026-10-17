@@ -1,5 +1,6 @@
 import { createChallengeRound, nextRound, pointsForAnswer, questions, rankPlayers } from '../lib/game';
 import { reviewCode } from '../lib/review';
+import { getPlacementRecommendation, placementQuestions } from '../lib/placement';
 
 describe('challenge scoring', () => {
   it('rewards fast correct answers and preserves a failed streak', () => {
@@ -24,4 +25,11 @@ describe('challenge scoring', () => {
     expect(reviewCode('var total = 2; console.log(total)').notes).toHaveLength(4);
     expect(reviewCode('const total = (value) => value * 2;').score).toBeGreaterThan(80);
   });
+
+  it('creates an adaptive placement recommendation', () => {
+    expect(placementQuestions).toHaveLength(6);
+    expect(getPlacementRecommendation([0, 0, 0, 0, 0, 0])).toMatchObject({ level: 1, pathId: 'js' });
+    expect(getPlacementRecommendation(placementQuestions.map((question) => question.answer))).toMatchObject({ level: 5, pathId: 'react' });
+  });
+
 });

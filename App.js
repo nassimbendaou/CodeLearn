@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,6 +8,7 @@ import { fetchDashboard, postSchema } from './lib/data';
 import { createChallengeRound, nextRound, questions, rankPlayers } from './lib/game';
 import { reviewCode } from './lib/review';
 import { getSeniorReview } from './lib/aiReview';
+import { getPlacementRecommendation, placementQuestions, placementSchema } from './lib/placement';
 
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
 const tabs = [
@@ -32,11 +34,16 @@ const badges = [
 function AppShell() {
   const [tab, setTab] = useState('home');
   const [lesson, setLesson] = useState(null);
+  const [placement, setPlacement] = useState(null);
+  const [placementReady, setPlacementReady] = useState(false);
   const dashboard = useQuery({ queryKey: ['dashboard'], queryFn: fetchDashboard });
-  if (dashboard.isLoading) return <Loading />;
+  useEffect(() => { let active = true; AsyncStorage.getItem('codelearn-placement').then((value) => { if (!active) return; if (value) { const parsed = placementSchema.safeParse(JSON.parse(value)); if (parsed.success) setPlacement(parsed.data); } setPlacementReady(true); }).catch(() => { if (active) setPlacementReady(true); }); return () => { active = false; }; }, []);
+  if (dashboard.isLoading || !placementReady) return <Loading />;
   if (dashboard.isError) return <ErrorState retry={dashboard.refetch} />;
+  if (!placement) return <Placement complete={(profile) => { AsyncStorage.setItem('codelearn-placement', JSON.stringify(profile)); setPlacement(profile); }} />;
   const startPath = (path) => { setLesson(path); setTab('learn'); };
-  const props = { data: dashboard.data, go: setTab, openLesson: setLesson, startPath };
+  const recommendedPath = learningPaths.find((path) => path.id === placement.pathId) ?? learningPaths[0];
+  const props = { data: dashboard.data, go: setTab, openLesson: setLesson, startPath, placement, recommendedPath };
   const screens = { home: <Home {...props} />, learn: lesson ? <Lesson path={lesson} close={() => setLesson(null)} /> : <Learning {...props} />, challenge: <Challenge {...props} />, network: <Network {...props} />, profile: <Profile {...props} /> };
   return <SafeAreaView style={styles.safe}><StatusBar style="light" />{screens[tab]}<TabBar current={tab} setCurrent={setTab} /></SafeAreaView>;
 }
@@ -46,14 +53,16 @@ function ErrorState({ retry }) { return <SafeAreaView style={[styles.safe, style
 function Header({ eyebrow, title, action, onAction }) { return <View style={styles.header}><View><Text style={styles.eyebrow}>{eyebrow}</Text><Text style={styles.title}>{title}</Text></View>{action && <Pressable onPress={onAction} style={styles.iconButton}><Ionicons name={action} size={20} color="#E9ECFF" /></Pressable>}</View>; }
 function Pill({ children, tone = 'violet' }) { return <View style={[styles.pill, tone === 'green' && styles.greenPill]}><Text style={[styles.pillText, tone === 'green' && styles.greenText]}>{children}</Text></View>; }
 
-function Home({ data, go, startPath }) {
+function Placement({ complete }) { const [index, setIndex] = useState(0); const [answers, setAnswers] = useState([]); const question = placementQuestions[index]; const selected = answers[index]; const next = () => { if (selected === undefined) return; if (index === placementQuestions.length - 1) { complete(getPlacementRecommendation(answers)); return; } setIndex((old) => old + 1); }; return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.page}><Pill tone="green">ÉTAPE 1 · PERSONNALISATION</Pill><Text style={styles.heroTitle}>Trouvons votre point de départ.</Text><Text style={styles.body}>Six questions rapides pour créer un parcours adapté à votre niveau.</Text><Text style={styles.muted}>Question {index + 1} / {placementQuestions.length}</Text><View style={styles.track}><View style={[styles.progress, { width: `${((index + 1) / placementQuestions.length) * 100}%`, backgroundColor: '#A98BFF' }]} /></View><View style={styles.questionCard}><Text style={styles.topic}>{question.topic.toUpperCase()}</Text><Text style={styles.question}>{question.prompt}</Text>{question.choices.map((choice, choiceIndex) => <Pressable key={choice} onPress={() => setAnswers((old) => { const nextAnswers = [...old]; nextAnswers[index] = choiceIndex; return nextAnswers; })} style={[styles.answer, selected === choiceIndex && styles.answerRight]}><Text style={styles.answerKey}>{String.fromCharCode(65 + choiceIndex)}</Text><Text style={styles.answerText}>{choice}</Text></Pressable>)}</View><Pressable disabled={selected === undefined} style={[styles.widePrimary, selected === undefined && { opacity: 0.45 }]} onPress={next}><Text style={styles.primaryText}>{index === placementQuestions.length - 1 ? 'Créer mon parcours' : 'Continuer'}</Text><Ionicons name="arrow-forward" size={18} color="#170C39" /></Pressable></ScrollView></SafeAreaView>; }
+
+function Home({ data, go, startPath, placement, recommendedPath }) {
   const { learner, rooms } = data;
   return <ScrollView contentContainerStyle={styles.page} showsVerticalScrollIndicator={false}>
     <Header eyebrow={`BON RETOUR, ${learner.name.toUpperCase()}`} title="Prêt à progresser ?" action="notifications-outline" />
-    <View style={styles.hero}><View style={styles.heroOrb} /><Pill tone="green">● Série de {learner.streak} jours</Pill><Text style={styles.heroTitle}>Une petite session,{`\n`}un vrai déclic.</Text><Text style={styles.heroBody}>Votre prochain défi personnalisé est prêt.</Text><Pressable style={styles.lightButton} onPress={() => go('challenge')}><Text style={styles.lightButtonText}>Lancer le défi</Text><Ionicons name="arrow-forward" size={18} color="#20124D" /></Pressable></View>
+    <View style={styles.hero}><View style={styles.heroOrb} /><Pill tone="green">● Niveau {placement.level} · {placement.label}</Pill><Text style={styles.heroTitle}>Votre parcours,{`\n`}prêt à décoller.</Text><Text style={styles.heroBody}>Commencez par {recommendedPath.title}, sélectionné selon votre test de niveau.</Text><Pressable style={styles.lightButton} onPress={() => startPath(recommendedPath)}><Text style={styles.lightButtonText}>Continuer mon parcours</Text><Ionicons name="arrow-forward" size={18} color="#20124D" /></Pressable></View>
     <View style={styles.stats}><Stat icon="trophy-outline" value={`${learner.points.toLocaleString()} XP`} label="points totaux" /><Stat icon="layers-outline" value={`Niv. ${learner.level}`} label="niveau actuel" /><Stat icon="people-outline" value={rooms} label="rooms actives" /></View>
     <SectionTitle title="Continuez votre parcours" action="Voir tout" onAction={() => go('learn')} />
-    <Course title="React : états et effets" progress={72} duration="18 min restantes" color="#AE8CFF" onPress={() => startPath(learningPaths[1])} />
+    <Course title={`Recommandé · ${recommendedPath.title}`} progress={recommendedPath.progress} duration={`${recommendedPath.lessons} leçons adaptées`} color={recommendedPath.color} onPress={() => startPath(recommendedPath)} />
     <Course title="Logique algorithmique" progress={38} duration="4 leçons" color="#49D3BC" onPress={() => startPath(learningPaths[0])} />
     <SectionTitle title="Défis en direct" action="Rejoindre" onAction={() => go('challenge')} />
     <Pressable onPress={() => go('challenge')} style={styles.liveCard}><View><Pill tone="green">● EN DIRECT</Pill><Text style={styles.liveTitle}>Sprint JavaScript</Text><Text style={styles.muted}>246 développeurs jouent maintenant</Text></View><Ionicons name="flash" size={30} color="#F8C35B" /></Pressable>
